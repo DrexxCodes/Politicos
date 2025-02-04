@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Registration</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    
+    <div class="news">
+        <marquee>Please only enter your details once🙂. </marquee>
+    </div>
+
+    <div class="container">
+        <div class="logo-container">
+            <a href="logo.png"><img src="logo.png" alt="Logo"></a>
+        </div>
+        <h2>Submit Your Details</h2>
+        <form id="registrationForm">
+            <input type="text" id="name" placeholder="Full Name" required>
+            <input type="number" id="regNumber" placeholder="Registration Number" required>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="loading" class="hidden">Validating...</div>
+        <div id="messageBox" class="hidden"></div>
+    </div>
+
+    <footer>Powered By Sonya. Drexx Largest Machine Model</footer>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="scripts/firebaseConfig.js"></script>
+    <script src="scripts/scripts.js"></script>
+</body>
+</html>

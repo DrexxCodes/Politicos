@@ -1,0 +1,76 @@
+.container {
+    width: 90%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #1e90ff; /* Blue */
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+select, button {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+button {
+    background-color: #4b2c61; /* Wine */
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #372047;
+}
+
+.table-container {
+    overflow-x: auto;
+    max-width: 100%;
+    background-color: white;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    color: black;
+}
+
+th, td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background-color: #4b2c61;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .controls {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 6px;
+    }
+}

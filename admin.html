@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="styles/admin.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Uploaded Details</h2>
+
+        <div class="controls">
+            <label for="sortField">Sort By:</label>
+            <select id="sortField">
+                <option value="name">Alphabetical</option>
+                <option value="timestamp">Date & Time</option>
+                <option value="regNumber">Registration Number</option>
+            </select>
+
+            <label for="sortOrder">Order:</label>
+            <select id="sortOrder">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+
+            <button id="sortBtn">Sort</button>
+            <button id="downloadBtn">Download PDF</button>
+        </div>
+
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Registration Number</th>
+                    <th>Date & Time</th>
+                    <th>Device ID</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="scripts/firebaseConfig.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="scripts/admin.js"></script>
+</body>
+</html>

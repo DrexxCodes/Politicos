@@ -1,14 +1,31 @@
 const db = firebase.firestore();
 let registrations = [];
 
-// Fetch data from Firestore
+// Fetch data from Firestore (Remove Duplicates)
 async function fetchRegistrations() {
     const snapshot = await db.collection("registrations").orderBy("timestamp", "asc").get();
-    registrations = snapshot.docs.map((doc, index) => ({
-        id: doc.id,
+    
+    // Store unique entries using a Map (key: "name|regNumber")
+    const uniqueEntries = new Map();
+
+    snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        const uniqueKey = `${data.name}|${data.regNumber}`;
+
+        if (!uniqueEntries.has(uniqueKey)) {
+            uniqueEntries.set(uniqueKey, {
+                id: doc.id,
+                ...data
+            });
+        }
+    });
+
+    // Convert map to array and add serial numbers
+    registrations = Array.from(uniqueEntries.values()).map((entry, index) => ({
         sn: index + 1, // Serial Number
-        ...doc.data()
+        ...entry
     }));
+
     renderTable();
 }
 
@@ -30,7 +47,7 @@ function renderTable() {
     });
 
     // Update total count
-    totalCount.textContent = `Total Uploads: ${registrations.length}`;
+    totalCount.textContent = `Total Unique Uploads: ${registrations.length}`;
 }
 
 // Sorting function

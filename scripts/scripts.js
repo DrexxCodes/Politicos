@@ -40,8 +40,8 @@ document.getElementById("registrationForm").addEventListener("submit", async (e)
     }
 
     // Validate Registration Number Format
-    if (!regNumber.startsWith("2024")) {
-        showMessage("Upload failed: Registration number must start with 2024.", "error");
+    if (!regNumber.startsWith("2024134")) {
+        showMessage("Upload failed: Registration number must start with 2024134.", "error");
         return;
     }
 

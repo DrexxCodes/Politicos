@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retrieve Device ID</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="scripts/firebaseConfig.js"></script> <!-- Firebase Config -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+            background: blue;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button.delete {
+            background: red;
+        }
+        #loading {
+            font-size: 18px;
+            margin-top: 10px;
+            display: none;
+        }
+        .hidden {
+            display: none;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Retrieve Device ID</h2>
+        <button onclick="retrieveDeviceID()">Retrieve Device ID</button>
+        
+        <!-- Loading Animation -->
+        <p id="loading" class="hidden">Querying DB... <span id="counter">0%</span></p>
+
+        <!-- Retrieved Details -->
+        <div id="detailsContainer" class="hidden">
+            <h3>Your Details</h3>
+            <label>Device ID:</label>
+            <input type="text" id="deviceID" readonly>
+
+            <label>Name:</label>
+            <input type="text" id="name" readonly>
+
+            <label>Registration Number:</label>
+            <input type="text" id="regNumber" readonly>
+
+            <label>Date & Time of Entry:</label>
+            <input type="text" id="timestamp" readonly>
+
+            <button class="delete" onclick="deleteRecord()">Delete My Record</button>
+        </div>
+    </div>
+
+    <script>
+        const db = firebase.firestore();
+        let docID = null; // Store Firestore document ID
+
+        // Retrieve device ID function
+        async function retrieveDeviceID() {
+            const storedDeviceID = localStorage.getItem("deviceID"); // Fetch from localStorage
+
+            if (!storedDeviceID) {
+                alert("No device ID found on this device.");
+                return;
+            }
+
+            document.getElementById("loading").classList.remove("hidden");
+
+            // Counter Animation
+            let count = 0;
+            const counterInterval = setInterval(() => {
+                count++;
+                document.getElementById("counter").innerText = count + "%";
+                if (count === 100) clearInterval(counterInterval);
+            }, 30);
+
+            // Fetch record from Firestore
+            setTimeout(async () => {
+                const snapshot = await db.collection("registrations").where("deviceId", "==", storedDeviceID).get();
+
+                if (snapshot.empty) {
+                    alert("No record found for this Device ID.");
+                    document.getElementById("loading").classList.add("hidden");
+                    return;
+                }
+
+                clearInterval(counterInterval);
+                document.getElementById("counter").innerText = "100%";
+
+                const doc = snapshot.docs[0];
+                docID = doc.id; // Store Firestore document ID
+                const data = doc.data();
+
+                document.getElementById("deviceID").value = data.deviceId;
+                document.getElementById("name").value = data.name;
+                document.getElementById("regNumber").value = data.regNumber;
+                document.getElementById("timestamp").value = new Date(data.timestamp.toDate()).toLocaleString();
+
+                document.getElementById("loading").classList.add("hidden");
+                document.getElementById("detailsContainer").classList.remove("hidden");
+
+            }, 3000); // Simulated delay for animation
+        }
+
+        // Delete record from Firestore
+        async function deleteRecord() {
+            if (!docID) return alert("No record selected.");
+
+            const confirmDelete = confirm("Are you sure? This will permanently delete your record.");
+            if (!confirmDelete) return;
+
+            await db.collection("registrations").doc(docID).delete();
+            localStorage.removeItem("deviceID"); // Remove from local storage
+            alert("Record deleted successfully!");
+
+            // Reset UI
+            document.getElementById("detailsContainer").classList.add("hidden");
+        }
+    </script>
+
+</body>
+</html>

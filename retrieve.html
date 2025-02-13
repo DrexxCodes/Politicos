@@ -101,73 +101,68 @@
                 return null;
             }
         }
+    
+// Retrieve registration details using IP & device ID
+async function retrieveRegistration() {
+    const userIP = await getUserIP();
+    const storedDeviceID = localStorage.getItem("deviceID");
 
-        // Retrieve registration details using IP & device ID
-        async function retrieveRegistration() {
-            const userIP = await getUserIP();
-            const storedDeviceID = localStorage.getItem("deviceID");
+    if (!userIP) {
+        alert("Could not retrieve your IP address. Please check your internet connection.");
+        return;
+    }
 
-            if (!userIP) {
-                alert("Could not retrieve your IP address. Please check your internet connection.");
-                return;
-            }
+    document.getElementById("loading").classList.remove("hidden");
 
-            document.getElementById("loading").classList.remove("hidden");
+    // Counter Animation
+    let count = 0;
+    const counterInterval = setInterval(() => {
+        count++;
+        document.getElementById("counter").innerText = count + "%";
+        if (count === 100) clearInterval(counterInterval);
+    }, 30);
 
-            // Counter Animation
-            let count = 0;
-            const counterInterval = setInterval(() => {
-                count++;
-                document.getElementById("counter").innerText = count + "%";
-                if (count === 100) clearInterval(counterInterval);
-            }, 30);
+    // Query Firestore for matching Device ID
+    let snapshot;
+    if (storedDeviceID) {
+        snapshot = await db.collection("registrations")
+            .where("deviceId", "==", storedDeviceID)
+            .get();
+    }
 
-            // Query Firestore for matching IP or Device ID
-            setTimeout(async () => {
-                let snapshot;
-                
-                if (storedDeviceID) {
-                    // Try finding by device ID
-                    snapshot = await db.collection("registrations")
-                        .where("deviceId", "==", storedDeviceID)
-                        .get();
-                }
+    // If no device ID match, check by user IP (stored as "ip" in Firestore)
+    if (!snapshot || snapshot.empty) {
+        snapshot = await db.collection("registrations")
+            .where("ip", "==", userIP) // Updated to match Firestore field "ip"
+            .get();
+    }
 
-                if (!snapshot || snapshot.empty) {
-                    // If no device ID match, check by user IP
-                    snapshot = await db.collection("registrations")
-                        .where("userIP", "==", userIP)
-                        .get();
-                }
+    if (snapshot.empty) {
+        alert("No record found for your device or IP.");
+        document.getElementById("loading").classList.add("hidden");
+        return;
+    }
 
-                if (snapshot.empty) {
-                    alert("No record found for your device or IP.");
-                    document.getElementById("loading").classList.add("hidden");
-                    return;
-                }
+    clearInterval(counterInterval);
+    document.getElementById("counter").innerText = "100%";
 
-                clearInterval(counterInterval);
-                document.getElementById("counter").innerText = "100%";
+    const doc = snapshot.docs[0];
+    docID = doc.id; // Store Firestore document ID
+    const data = doc.data();
 
-                const doc = snapshot.docs[0];
-                docID = doc.id; // Store Firestore document ID
-                const data = doc.data();
+    document.getElementById("deviceID").value = data.deviceId;
+    document.getElementById("name").value = data.name;
+    document.getElementById("regNumber").value = data.regNumber;
+    document.getElementById("timestamp").value = new Date(data.timestamp.toDate()).toLocaleString();
 
-                document.getElementById("deviceID").value = data.deviceId;
-                document.getElementById("name").value = data.name;
-                document.getElementById("regNumber").value = data.regNumber;
-                document.getElementById("timestamp").value = new Date(data.timestamp.toDate()).toLocaleString();
+    // Fetch total registrations to determine the order
+    const allRegistrations = await db.collection("registrations").orderBy("timestamp", "asc").get();
+    const index = allRegistrations.docs.findIndex(d => d.id === docID) + 1;
+    
+    document.getElementById("registrationOrder").innerText = `You are the ${index}${getOrdinalSuffix(index)} person to register.`;
 
-                // Fetch total registrations to determine the order
-                const allRegistrations = await db.collection("registrations").orderBy("timestamp", "asc").get();
-                const index = allRegistrations.docs.findIndex(d => d.id === docID) + 1;
-                
-                document.getElementById("registrationOrder").innerText = `You are the ${index}${getOrdinalSuffix(index)} person to register.`;
-
-                document.getElementById("loading").classList.add("hidden");
-                document.getElementById("detailsContainer").classList.remove("hidden");
-
-            }, 3000); // Simulated delay for animation
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("detailsContainer").classList.remove("hidden");
         }
 
         // Delete record from Firestore

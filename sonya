@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find & Update Registration</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="scripts/firebaseConfig.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #ddd;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 2.5s linear;
+        }
+        .hidden {
+            display: none;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .edit-container {
+            margin-top: 15px;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Find & Update Registration</h2>
+        <label for="regNumber">Enter Reg Number:</label>
+        <input type="text" id="regNumber" placeholder="Enter your Registration Number">
+        <button onclick="fetchUserDetails()">Search</button>
+
+        <!-- Loading & Progress -->
+        <div id="loadingContainer" class="hidden">
+            <p id="loadingText">Querying database...</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Result Display -->
+        <div id="result" class="hidden">
+            <p><strong>Name:</strong> <span id="userName"></span></p>
+            <p><strong>Date & Time:</strong> <span id="regDate"></span></p>
+            <p><strong>Position:</strong> <span id="position"></span></p>
+            <p id="successMessage" class="hidden">Details Fetched ✅</p>
+
+            <!-- Editable Fields -->
+            <div class="edit-container">
+                <h3>Edit Details</h3>
+                <label for="editName">Name:</label>
+                <input type="text" id="editName">
+                
+                <label for="editRegNumber">Reg Number:</label>
+                <input type="text" id="editRegNumber">
+
+                <button onclick="updateUserDetails()">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const db = firebase.firestore();
+        let userId = null; // Stores user document ID
+
+        async function fetchUserDetails() {
+            const regNumber = document.getElementById("regNumber").value.trim();
+            if (!regNumber) {
+                alert("Please enter a Registration Number.");
+                return;
+            }
+
+            document.getElementById("loadingContainer").classList.remove("hidden");
+            document.getElementById("loadingText").innerText = "Querying database...";
+            document.getElementById("result").classList.add("hidden");
+
+            setTimeout(() => {
+                document.getElementById("loadingText").innerText = "Parsing with Sonya...";
+
+                setTimeout(async () => {
+                    document.querySelector(".progress-fill").style.width = "100%"; // Animate progress bar
+
+                    setTimeout(async () => {
+                        const snapshot = await db.collection("registrations").orderBy("timestamp", "asc").get();
+                        const registrations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                        // Find user in the sorted list
+                        const user = registrations.find(entry => entry.regNumber === regNumber);
+                        if (!user) {
+                            alert("No matching registration found.");
+                            document.getElementById("loadingContainer").classList.add("hidden");
+                            return;
+                        }
+
+                        userId = user.id; // Store the Firestore document ID
+                        const position = registrations.findIndex(entry => entry.regNumber === regNumber) + 1;
+                        document.getElementById("userName").textContent = user.name;
+                        document.getElementById("regDate").textContent = new Date(user.timestamp.toDate()).toLocaleString();
+                        document.getElementById("position").textContent = position;
+
+                        // Populate editable fields
+                        document.getElementById("editName").value = user.name;
+                        document.getElementById("editRegNumber").value = user.regNumber;
+
+                        document.getElementById("loadingContainer").classList.add("hidden");
+                        document.getElementById("result").classList.remove("hidden");
+                        document.getElementById("successMessage").classList.remove("hidden");
+
+                    }, 2500);
+                }, 2000);
+            }, 2000);
+        }
+
+        async function updateUserDetails() {
+            if (!userId) {
+                alert("No user details found. Please search first.");
+                return;
+            }
+
+            const newName = document.getElementById("editName").value.trim();
+            const newRegNumber = document.getElementById("editRegNumber").value.trim();
+
+            if (!newName || !newRegNumber) {
+                alert("Name and Registration Number cannot be empty.");
+                return;
+            }
+
+            try {
+                await db.collection("registrations").doc(userId).update({
+                    name: newName,
+                    regNumber: newRegNumber
+                });
+
+                alert("Details updated successfully!");
+                fetchUserDetails(); // Refresh data
+            } catch (error) {
+                console.error("Error updating details:", error);
+                alert("Failed to update details.");
+            }
+        }
+    </script>
+
+</body>
+</html>
